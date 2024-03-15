@@ -1,0 +1,10 @@
+server:
+  port: "运行的端口号"
+
+mongo:
+  main_uri: "mongodb://username:password@ipaddress:port"
+
+redis:
+  main_uri: "redis://ipaddress:port"
+  main_pass: "password"
+  main_db: 0

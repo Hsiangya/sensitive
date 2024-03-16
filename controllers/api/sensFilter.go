@@ -49,14 +49,11 @@ func SenFilterQuery(c *gin.Context) {
 		return
 	}
 	ctx := context.Background()
-	isSensitive, err := services.IsSensitive(ctx, query.Text)
-	if err != nil {
-		return
-	}
+	isSensitive := services.IsSensitive(ctx, query.Text)
 	if isSensitive {
-		c.JSON(http.StatusOK, &utils.ResponseContent{Code: 200, Msg: "存在敏感词"})
+		c.JSON(http.StatusOK, &utils.ResponseContent{Code: 200, Msg: "存在敏感词", Data: false})
 	} else {
-		c.JSON(http.StatusOK, &utils.ResponseContent{Code: 200, Msg: "没有敏感词"})
+		c.JSON(http.StatusOK, &utils.ResponseContent{Code: 200, Msg: "没有敏感词", Data: true})
 	}
 
 }

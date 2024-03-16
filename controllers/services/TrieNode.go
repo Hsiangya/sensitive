@@ -3,44 +3,75 @@ package services
 import (
 	"context"
 	"errors"
-	"github.com/go-redis/redis/v8"
+	"fmt"
 	"sensitive/controllers/factory"
 )
 
+//func InsertWord(ctx context.Context, word string) error {
+//	currentHash := "root"
+//	for _, char := range word {
+//		charStr := string(char)
+//		endExists, err := factory.RedisInstance.HExists(ctx, currentHash, "end")
+//		if err != nil {
+//			return errors.New("error checking for 'end': " + err.Error())
+//		}
+//		if endExists {
+//			return nil
+//		}
+//		nextHash, err := factory.RedisInstance.HGet(ctx, currentHash, charStr)
+//		if errors.Is(redis.Nil, err) {
+//			nextHash = currentHash + ":" + charStr
+//			err := factory.RedisInstance.HSet(ctx, currentHash, charStr, nextHash)
+//			if err != nil {
+//				return errors.New("Error setting next hash: " + err.Error())
+//			}
+//		} else if err != nil {
+//			return errors.New("Error getting next hash: " + err.Error())
+//		}
+//		currentHash = nextHash
+//	}
+//	err := factory.RedisInstance.HSet(ctx, currentHash, "end", true)
+//	if err != nil {
+//		fmt.Println("Error setting 'end':", err)
+//	}
+//	return nil
+//}
+
 func InsertWord(ctx context.Context, word string) error {
-	node := "root"
+	currentNode := "root"
 	for _, char := range word {
-		key := string(char)
-		isEnd, err := factory.RedisInstance.Client.HGet(ctx, key, "isEnd").Int64()
-		if err != nil && !errors.Is(redis.Nil, err) {
-			return err
+		charStr := string(char)
+		endExists, err := factory.RedisInstance.HExists(ctx, currentNode, "end")
+		if err != nil {
+			return errors.New("error checking for 'end': " + err.Error())
 		}
-		if isEnd == 1 {
+		if endExists {
 			return nil
 		}
-		_, err = factory.RedisInstance.Client.HSetNX(ctx, key, "isEnd", 0).Result()
+		err = factory.RedisInstance.HSet(ctx, currentNode, charStr, charStr)
 		if err != nil {
-			return err
+			return errors.New("Error setting next hash: " + err.Error())
 		}
-		node = key
+		currentNode = charStr
 	}
-	_, err := factory.RedisInstance.Client.HSet(ctx, node, "isEnd", 1).Result()
-	return err
+	err := factory.RedisInstance.HSet(ctx, currentNode, "end", true)
+	if err != nil {
+		fmt.Println("Error setting 'end':", err)
+	}
+	return nil
 }
 
-func IsSensitive(ctx context.Context, word string) (bool, error) {
+func IsSensitive(ctx context.Context, word string) bool {
+	node := "root"
 	for _, char := range word {
-		key := string(char)
-		isEnd, err := factory.RedisInstance.Client.HGet(ctx, key, "isEnd").Int64()
-		if errors.Is(redis.Nil, err) {
-			return false, nil
-		}
-		if err != nil {
-			return false, err
-		}
-		if isEnd == 1 {
-			return true, nil
+		isValue := factory.RedisInstance.HGet(ctx, node, string(char))
+		fmt.Println("isValue %s", isValue)
+		node = isValue
+
+		isEnd := factory.RedisInstance.HGet(ctx, node, "end")
+		if string(isEnd) == "1" {
+			return true
 		}
 	}
-	return false, nil
+	return false
 }

@@ -6,6 +6,5 @@ type SensitiveStringCreate struct {
 }
 
 type SensitiveStringQuery struct {
-	Text          string `json:"text" binding:"required,min=1"`
-	SensitiveType string `json:"sensitive_type"`
+	Text string `form:"text" binding:"required,min=1"`
 }

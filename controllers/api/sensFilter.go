@@ -43,10 +43,20 @@ func SenFilterCreate(c *gin.Context) {
 }
 
 func SenFilterQuery(c *gin.Context) {
-	info := schemes.SensitiveStringQuery{}
-	if err := c.ShouldBindJSON(&info); err != nil {
+	query := schemes.SensitiveStringQuery{}
+	if err := c.ShouldBindQuery(&query); err != nil {
 		c.JSON(http.StatusOK, &utils.ResponseContent{Code: 100422, Msg: err.Error()})
 		return
 	}
-	c.JSON(http.StatusOK, &utils.ResponseContent{Code: 200, Msg: "没有敏感词"})
+	ctx := context.Background()
+	isSensitive, err := services.IsSensitive(ctx, query.Text)
+	if err != nil {
+		return
+	}
+	if isSensitive {
+		c.JSON(http.StatusOK, &utils.ResponseContent{Code: 200, Msg: "存在敏感词"})
+	} else {
+		c.JSON(http.StatusOK, &utils.ResponseContent{Code: 200, Msg: "没有敏感词"})
+	}
+
 }

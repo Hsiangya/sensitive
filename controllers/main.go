@@ -15,28 +15,32 @@ import (
 
 func CreateApp(env string) {
 	initConfig(env)
-	port := viper.GetString("server.port")
-	router := gin.Default()
-	router.MaxMultipartMemory = 24 << 20 // 8 MiB
+	g := gin.Default()
+	g.MaxMultipartMemory = 24 << 20 // 8 MiB
 	initPlugin()
 	initValidation()
-	InitRouter(router)
-	err := router.Run(fmt.Sprintf(":%s", port))
+	InitRouter(g)
+	fmt.Println(viper.GetString("application.port"))
+	err := g.Run(fmt.Sprintf(":%s", viper.GetString("application.port")))
 	if err != nil {
 		return
 	}
 }
 
 func initConfig(env string) {
-	configPath := map[string]string{
-		"dev"
+	configMapping := map[string]string{
+		"dev":  "./configs/app-dev.yaml",
+		"test": "/configs/app-test.yaml",
+		"pro":  "/configs/app-pro.yaml",
 	}
 	v := viper.New()
-	v.SetConfigName("configs")
-	v.SetConfigType("yaml")
-	v.AddConfigPath("./configs")
+	configPath, exist := configMapping[env]
+	if !exist {
+		configPath = configMapping["dev"]
+	}
+	v.SetConfigFile(configPath)
 
-	if err := viper.ReadInConfig(); err != nil {
+	if err := v.ReadInConfig(); err != nil {
 		fmt.Printf("Error reading config file, %s", err)
 		os.Exit(1)
 	}
@@ -68,7 +72,8 @@ func initValidation() {
 }
 
 func initPlugin() {
-	mongoURL := viper.GetString("mongo.url")
-	factory.CreateMongoApp(mongoURL)
+	//mongoURL := viper.GetString("mongo.url")
 	factory.InitDFATree()
+
+	//factory.CreateMongoApp(mongoURL)
 }

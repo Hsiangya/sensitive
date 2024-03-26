@@ -4,10 +4,11 @@ import (
 	"context"
 	"fmt"
 	"github.com/go-redis/redis/v8"
-	"github.com/spf13/viper"
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
 	"sensitive/controllers/dependences"
+	services "sensitive/controllers/services"
+
 	"sync"
 )
 
@@ -16,13 +17,14 @@ var (
 	mongoOnce     sync.Once
 	RedisInstance *dependences.RedisClient
 	redisOnce     sync.Once
+	DfaInstance   *dependences.DFATree
+	dfaOnce       sync.Once
 )
 
-func ConnectMongo() *dependences.MongoDBClient {
-	mongoURL := viper.GetString("mongo.main_uri")
+func CreateMongoApp(Url string) *dependences.MongoDBClient {
 	mongoOnce.Do(func() {
-		client, err := mongo.Connect(context.TODO(), options.Client().ApplyURI(mongoURL))
-		fmt.Printf("connect %s \n", mongoURL)
+		client, err := mongo.Connect(context.TODO(), options.Client().ApplyURI(Url))
+		fmt.Printf("connect %s \n", Url)
 		if err != nil {
 			panic(err)
 		}
@@ -31,18 +33,14 @@ func ConnectMongo() *dependences.MongoDBClient {
 	return MongoInstance
 }
 
-func ConnectRedis() *dependences.RedisClient {
-	redisURL := viper.GetString("redis.main_uri")
-	redisDB := viper.GetInt("redis.main_db")
-	redisPassword := viper.GetString("redis.main_pass")
-
+func CreateRedisApp(url string, db int, password string) *dependences.RedisClient {
 	redisOnce.Do(func() {
-		opt, err := redis.ParseURL(redisURL)
+		opt, err := redis.ParseURL(url)
 		if err != nil {
 			panic(err)
 		}
-		opt.DB = redisDB
-		opt.Password = redisPassword
+		opt.DB = db
+		opt.Password = password
 		client := redis.NewClient(opt)
 
 		err = client.Ping(context.Background()).Err()
@@ -50,9 +48,16 @@ func ConnectRedis() *dependences.RedisClient {
 			panic(err)
 		}
 
-		fmt.Printf("connected to Redis: %s, DB: %d\n", redisURL, redisDB)
+		fmt.Printf("connected to Redis: %s, DB: %d\n", url, db)
 		RedisInstance = &dependences.RedisClient{Client: client}
 	})
-
 	return RedisInstance
+}
+
+func InitDFATree() *dependences.DFATree {
+	dfaOnce.Do(func() {
+		DfaInstance = &dependences.DFATree{Root: &dependences.Node{Children: make(map[rune]*dependences.Node)}}
+		services.LoadSensitiveWord(MongoInstance, DfaInstance)
+	})
+	return DfaInstance
 }

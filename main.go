@@ -5,5 +5,5 @@ import (
 )
 
 func main() {
-	controllers.Run()
+	controllers.CreateApp("dev")
 }

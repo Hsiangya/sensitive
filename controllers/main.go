@@ -64,6 +64,6 @@ func initValidation() {
 }
 
 func initPlugin() {
-	factory.ConnectMongo()
-	factory.ConnectRedis()
+	mongoURL := viper.GetString("mongo.url")
+	factory.CreateMongoApp(mongoURL)
 }

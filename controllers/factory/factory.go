@@ -55,7 +55,6 @@ func CreateRedisApp(url string, db int, password string) *dependences.RedisClien
 func CreateDFATree() *dependences.DFATree {
 	dfaOnce.Do(func() {
 		DfaInstance = &dependences.DFATree{Root: &dependences.Node{Children: make(map[rune]*dependences.Node)}}
-
 		DfaInstance.LoadSensitiveWord(MongoInstance)
 	})
 	return DfaInstance

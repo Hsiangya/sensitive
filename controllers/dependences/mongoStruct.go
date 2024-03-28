@@ -68,35 +68,6 @@ func (m *MongoDBClient) FindOne(ctx context.Context, database, collection string
 	return result, nil
 }
 
-//func (m *MongoDBClient) FindMany(ctx context.Context, database, collection string, filter interface{}) ([]bson.M, error) {
-//	cursor, err := m.Client.Database(database).Collection(collection).Find(ctx, filter)
-//	if err != nil {
-//		return nil, err
-//	}
-//	defer func(cursor *mongo.Cursor, ctx context2.Context) {
-//		err := cursor.Close(ctx)
-//		if err != nil {
-//
-//		}
-//	}(cursor, ctx)
-//
-//	var results []bson.M
-//	for cursor.Next(ctx) {
-//		var result bson.M
-//		if err := cursor.Decode(&result); err != nil {
-//			return nil, err
-//		}
-//		if oid, ok := result["_id"].(primitive.ObjectID); ok {
-//			result["_id"] = oid.Hex()
-//		}
-//		results = append(results, result)
-//	}
-//	if err := cursor.Err(); err != nil {
-//		return nil, err
-//	}
-//	return results, nil
-//}
-
 func (m *MongoDBClient) FindMany(ctx context.Context, database, collection string, filter interface{}) []bson.M {
 	results := make([]bson.M, 0)
 	cursor, err := m.Client.Database(database).Collection(collection).Find(ctx, filter)

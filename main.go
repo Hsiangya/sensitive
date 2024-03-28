@@ -5,5 +5,5 @@ import (
 )
 
 func main() {
-	controllers.CreateApp("dev")
+	controllers.CreateApp("release")
 }

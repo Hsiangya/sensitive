@@ -14,6 +14,7 @@ import (
 )
 
 func CreateApp(env string) {
+	gin.SetMode(env)
 	initConfig(env)
 	initPlugin()
 	initValidation()
@@ -27,9 +28,9 @@ func CreateApp(env string) {
 
 func initConfig(env string) {
 	configMapping := map[string]string{
-		"dev":  "./configs/app-dev.yaml",
-		"test": "./configs/app-test.yaml",
-		"pro":  "./configs/app-pro.yaml",
+		"debug":   "./configs/app-dev.yaml",
+		"test":    "./configs/app-test.yaml",
+		"release": "./configs/app-pro.yaml",
 	}
 	configPath, exist := configMapping[env]
 	if !exist {
@@ -44,7 +45,7 @@ func initConfig(env string) {
 }
 
 func createGinApp() *gin.Engine {
-	g := gin.Default()
+	g := gin.New()
 	g.MaxMultipartMemory = 24 << 20 // 8 MiB
 	response := &utils.ResponseContent{Code: 100404, Msg: "路由不存在"}
 	g.NoRoute(func(c *gin.Context) {

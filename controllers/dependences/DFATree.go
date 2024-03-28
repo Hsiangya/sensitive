@@ -2,7 +2,6 @@ package dependences
 
 import (
 	"context"
-	"fmt"
 	"go.mongodb.org/mongo-driver/bson"
 	"unicode"
 )
@@ -38,7 +37,6 @@ func (d *DFATree) CheckChinese(words string) bool {
 			if !unicode.Is(unicode.Han, nextChar) {
 				continue
 			}
-			fmt.Println(nextChar)
 			nextNode, exists := node.Children[nextChar]
 			if !exists {
 				break
@@ -81,7 +79,6 @@ func (d *DFATree) CheckEnglish(words string) bool {
 }
 
 func (d *DFATree) LoadSensitiveWord(mongo *MongoDBClient) {
-	fmt.Println("begin loading")
 	filter := bson.M{}
 	ctx := context.Background()
 	sensitiveWords := mongo.FindMany(ctx, "public_info", "sensitive", filter)
@@ -89,10 +86,7 @@ func (d *DFATree) LoadSensitiveWord(mongo *MongoDBClient) {
 		if text, ok := wordMapping["text"].(string); ok {
 			d.AddWord(text)
 		}
-		fmt.Println(wordMapping["text"].(string))
-
 	}
-
 }
 
 func isEnglishLetter(r rune) bool {

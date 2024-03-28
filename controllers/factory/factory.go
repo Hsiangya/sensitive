@@ -7,8 +7,6 @@ import (
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
 	"sensitive/controllers/dependences"
-	services "sensitive/controllers/services"
-
 	"sync"
 )
 
@@ -54,10 +52,11 @@ func CreateRedisApp(url string, db int, password string) *dependences.RedisClien
 	return RedisInstance
 }
 
-func InitDFATree() *dependences.DFATree {
+func CreateDFATree() *dependences.DFATree {
 	dfaOnce.Do(func() {
 		DfaInstance = &dependences.DFATree{Root: &dependences.Node{Children: make(map[rune]*dependences.Node)}}
-		services.LoadSensitiveWord(MongoInstance, DfaInstance)
+
+		DfaInstance.LoadSensitiveWord(MongoInstance)
 	})
 	return DfaInstance
 }

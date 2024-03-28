@@ -1,6 +1,11 @@
 package dependences
 
-import "unicode"
+import (
+	"context"
+	"fmt"
+	"go.mongodb.org/mongo-driver/bson"
+	"unicode"
+)
 
 type Node struct {
 	Children map[rune]*Node
@@ -21,7 +26,6 @@ func (d *DFATree) AddWord(word string) {
 		node = node.Children[char]
 	}
 	node.IsEnd = true
-
 }
 
 func (d *DFATree) CheckChinese(words string) bool {
@@ -29,13 +33,12 @@ func (d *DFATree) CheckChinese(words string) bool {
 		if !unicode.Is(unicode.Han, char) {
 			continue
 		}
-
 		node := d.Root
 		for _, nextChar := range words[index:] {
 			if !unicode.Is(unicode.Han, nextChar) {
 				continue
 			}
-
+			fmt.Println(nextChar)
 			nextNode, exists := node.Children[nextChar]
 			if !exists {
 				break
@@ -59,7 +62,7 @@ func (d *DFATree) CheckEnglish(words string) bool {
 
 		node := d.Root
 		for _, nextChar := range words[index:] {
-			if !isEnglishLetter(char) {
+			if !isEnglishLetter(nextChar) {
 				continue
 			}
 			nextNode, exists := node.Children[nextChar]
@@ -75,6 +78,21 @@ func (d *DFATree) CheckEnglish(words string) bool {
 
 	}
 	return false
+}
+
+func (d *DFATree) LoadSensitiveWord(mongo *MongoDBClient) {
+	fmt.Println("begin loading")
+	filter := bson.M{}
+	ctx := context.Background()
+	sensitiveWords := mongo.FindMany(ctx, "public_info", "sensitive", filter)
+	for _, wordMapping := range sensitiveWords {
+		if text, ok := wordMapping["text"].(string); ok {
+			d.AddWord(text)
+		}
+		fmt.Println(wordMapping["text"].(string))
+
+	}
+
 }
 
 func isEnglishLetter(r rune) bool {

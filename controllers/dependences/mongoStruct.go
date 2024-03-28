@@ -6,6 +6,7 @@ import (
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"
 	"golang.org/x/net/context"
+	"log"
 )
 
 type MongoDBClient struct {
@@ -67,30 +68,63 @@ func (m *MongoDBClient) FindOne(ctx context.Context, database, collection string
 	return result, nil
 }
 
-func (m *MongoDBClient) FindMany(ctx context.Context, database, collection string, filter interface{}) ([]bson.M, error) {
+//func (m *MongoDBClient) FindMany(ctx context.Context, database, collection string, filter interface{}) ([]bson.M, error) {
+//	cursor, err := m.Client.Database(database).Collection(collection).Find(ctx, filter)
+//	if err != nil {
+//		return nil, err
+//	}
+//	defer func(cursor *mongo.Cursor, ctx context2.Context) {
+//		err := cursor.Close(ctx)
+//		if err != nil {
+//
+//		}
+//	}(cursor, ctx)
+//
+//	var results []bson.M
+//	for cursor.Next(ctx) {
+//		var result bson.M
+//		if err := cursor.Decode(&result); err != nil {
+//			return nil, err
+//		}
+//		if oid, ok := result["_id"].(primitive.ObjectID); ok {
+//			result["_id"] = oid.Hex()
+//		}
+//		results = append(results, result)
+//	}
+//	if err := cursor.Err(); err != nil {
+//		return nil, err
+//	}
+//	return results, nil
+//}
+
+func (m *MongoDBClient) FindMany(ctx context.Context, database, collection string, filter interface{}) []bson.M {
+	results := make([]bson.M, 0)
 	cursor, err := m.Client.Database(database).Collection(collection).Find(ctx, filter)
 	if err != nil {
-		return nil, err
+		log.Printf("Error finding documents: %v", err)
+		return results
 	}
-	defer cursor.Close(ctx)
+	defer func() {
+		if err := cursor.Close(ctx); err != nil {
+			log.Printf("Error closing cursor: %v", err)
+		}
+	}()
 
-	var results []bson.M
 	for cursor.Next(ctx) {
 		var result bson.M
 		if err := cursor.Decode(&result); err != nil {
-			return nil, err
-		}
-		if oid, ok := result["_id"].(primitive.ObjectID); ok {
-			result["_id"] = oid.Hex()
+			log.Printf("Error decoding document: %v", err)
+			return results
 		}
 		results = append(results, result)
 	}
-	if err := cursor.Err(); err != nil {
-		return nil, err
-	}
-	return results, nil
-}
 
+	if err := cursor.Err(); err != nil {
+		log.Printf("Cursor error: %v", err)
+		return results
+	}
+	return results
+}
 func (m *MongoDBClient) UpdateOne(ctx context.Context, database, collection string, filter, update interface{}) (*mongo.UpdateResult, error) {
 	result, err := m.Client.Database(database).Collection(collection).UpdateOne(ctx, filter, update)
 	if err != nil {

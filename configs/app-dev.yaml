@@ -1,5 +1,4 @@
 application:
-  port: 1364
+  port: "1364"
 mongo:
-  url: "mongodb://username:password@ipaddress:port"
-
+  url: "mongodb://zbhlksldl:RENzhichu123@10.0.70.3:27017"
